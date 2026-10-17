@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>We value your privacy</title>
+<style>
+:root{--a:#8b5cf6;--b:#22d3ee;--text:#f5f3ff;--muted:#a1a1c7}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);
+  background:
+    radial-gradient(1000px 600px at 20% -10%,#3b1d72 0,transparent 60%),
+    radial-gradient(900px 600px at 105% 110%,#0e3a4a 0,transparent 55%),
+    linear-gradient(160deg,#0b0717,#1a0f33);
+  overflow:hidden;
+}
+.page{height:100%;display:grid;place-items:center;padding:20px;color:var(--muted);font-size:14px;text-align:center}
+.banner{
+  position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:24px;
+  background:rgba(11,7,23,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.inner{width:min(600px,100%);text-align:center}
+h1{margin:0 0 12px;font-size:34px;letter-spacing:-.02em}
+p{margin:0;font-size:16px;line-height:1.55;color:var(--muted)}
+.count{color:var(--text);font-weight:600}
+.arena{position:relative;height:200px;margin-top:28px;touch-action:none}
+button{font:600 15px/1 system-ui,-apple-system,"Segoe UI",sans-serif;border:0;cursor:pointer;white-space:nowrap}
+#accept{
+  position:absolute;right:0;top:12px;padding:14px 24px;border-radius:14px;color:#fff;
+  background:linear-gradient(120deg,var(--a),var(--b));
+  box-shadow:0 12px 30px -8px rgba(139,92,246,.7);
+  transform-origin:right center;
+  transition:transform .35s cubic-bezier(.2,.9,.3,1.25);
+}
+#reject{
+  position:absolute;left:0;top:14px;padding:12px 18px;border-radius:14px;color:var(--muted);
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  transition:left .28s cubic-bezier(.2,.9,.3,1.25),top .28s cubic-bezier(.2,.9,.3,1.25);
+}
+#manage{
+  position:absolute;left:0;bottom:0;background:none;color:var(--muted);
+  font-weight:500;font-size:13px;text-decoration:underline;padding:4px 0;
+}
+.note{position:absolute;right:0;bottom:6px;font-size:12px;color:var(--muted);opacity:.75;max-width:55%;text-align:right}
+#toast{
+  position:fixed;left:50%;top:24px;z-index:10;transform:translate(-50%,-160%);
+  padding:12px 18px;border-radius:999px;background:rgba(20,14,40,.92);
+  border:1px solid rgba(34,211,238,.4);font-size:14px;white-space:nowrap;
+  transition:transform .4s cubic-bezier(.2,.9,.3,1.2);
+}
+#toast.show{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div>
+    <p>This is a page with content. Honestly, that's all it is.</p>
+  </div>
+</div>
+
+<section class="banner" role="dialog" aria-labelledby="ct">
+  <div class="inner">
+  <h1 id="ct">We value your privacy</h1>
+  <p>We and <span class="count" id="count">842</span> partners use cookies to improve your experience, personalize ads, and measure things we will not explain.</p>
+
+  <div class="arena" id="arena">
+    <button id="reject" type="button">Reject all</button>
+    <button id="accept" type="button">Accept all</button>
+    <button id="manage" type="button">Manage preferences</button>
+    <div class="note" id="note">Rejecting is available. It is just somewhere else.</div>
+  </div>
+  </div>
+</section>
+<div id="toast"></div>
+
+<script>
+const arena  = document.getElementById('arena');
+const reject = document.getElementById('reject');
+const accept = document.getElementById('accept');
+const manage = document.getElementById('manage');
+const count  = document.getElementById('count');
+const note   = document.getElementById('note');
+const toast  = document.getElementById('toast');
+
+const NOTES = ['Rejecting is available. It is just somewhere else.',
+               'Reject all is still here, probably.',
+               'Accept all is getting bigger. This is intentional.',
+               'Our partners are excited to meet you.',
+               'Reject all has left the banner.',
+               'Your choices are very important to us.',
+               'Accept all is the only option that fits now.',
+               'Thank you for your patience.',
+               'Reject all is enjoying the walk.',
+               'Accept all is basically the whole screen.',
+               'You are almost done. So are we.'];
+const FREE_AFTER = 12;
+let dodges = 0, free = false, lastDodge = 0, partners = 842;
+
+function place(px, py){
+  const aw = arena.clientWidth, ah = arena.clientHeight;
+  const bw = reject.offsetWidth, bh = reject.offsetHeight;
+  let x, y, t = 0;
+  do {
+    x = Math.random() * (aw * 0.6 - bw);
+    y = Math.random() * (ah - bh - 30);
+    t++;
+  } while (px != null && Math.hypot(x + bw/2 - px, y + bh/2 - py) < 150 && t < 20);
+  reject.style.left = x + 'px';
+  reject.style.top  = y + 'px';
+}
+
+function dodge(px = null, py = null){
+  if (free) return;
+  const now = Date.now();
+  if (now - lastDodge < 350) return;
+  lastDodge = now;
+  dodges++;
+  partners += Math.floor(Math.random() * 40) + 7;
+  count.textContent = partners.toLocaleString();
+  note.textContent = NOTES[Math.min(dodges, NOTES.length - 1)];
+  accept.style.transform = `scale(${Math.min(1.5, 1 + dodges * 0.04)})`;
+  place(px, py);
+  if (dodges >= FREE_AFTER) free = true;
+}
+
+// Desktop: Reject all flees the cursor
+arena.addEventListener('pointermove', e=>{
+  if (free || e.pointerType !== 'mouse') return;
+  const r = arena.getBoundingClientRect();
+  const b = reject.getBoundingClientRect();
+  const px = e.clientX - r.left, py = e.clientY - r.top;
+  const cx = b.left + b.width/2 - r.left, cy = b.top + b.height/2 - r.top;
+  if (Math.hypot(px - cx, py - cy) < 90) dodge(px, py);
+});
+
+// Hold Reject for 2 seconds. It runs away while you hold it.
+const HOLD_MS = 2000;
+let holding = false, rejected = false, holdStart = 0, runTimer = null, holdTick = null;
+let pointerX = null, pointerY = null;
+
+function setProgress(p){
+  reject.style.background = `linear-gradient(90deg, rgba(139,92,246,.45) ${p}%, rgba(255,255,255,.06) ${p}%)`;
+}
+function runAway(){
+  place(pointerX, pointerY);
+}
+function endHold(){
+  holding = false;
+  clearInterval(runTimer);
+  clearInterval(holdTick);
+  setProgress(0);
+  if (!rejected) note.textContent = NOTES[Math.min(dodges, NOTES.length - 1)];
+}
+function completeHold(){
+  endHold();
+  rejected = true;
+  note.textContent = 'Rejected. You may now close this banner. We will not.';
+  show('Rejected. Please allow 6 to 8 weeks for this to take effect.');
+}
+
+reject.addEventListener('pointerdown', e=>{
+  if (holding || rejected) return;
+  e.preventDefault();
+  holding = true;
+  reject.setPointerCapture(e.pointerId);
+  holdStart = Date.now();
+  const r = arena.getBoundingClientRect();
+  pointerX = e.clientX - r.left;
+  pointerY = e.clientY - r.top;
+  note.textContent = 'Keep holding. It does not want to be held.';
+  runAway();
+  runTimer = setInterval(runAway, 550);
+  holdTick = setInterval(()=>{
+    const p = Math.min(100, (Date.now() - holdStart) / HOLD_MS * 100);
+    setProgress(p);
+    if (p >= 100) completeHold();
+  }, 40);
+});
+
+reject.addEventListener('pointermove', e=>{
+  if (!holding) return;
+  const r = arena.getBoundingClientRect();
+  pointerX = e.clientX - r.left;
+  pointerY = e.clientY - r.top;
+});
+
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>
+  reject.addEventListener(ev, ()=>{
+    if (!holding) return;
+    note.textContent = 'Released too early. Start again.';
+    endHold();
+  })
+);
+
+accept.addEventListener('click', ()=>{
+  show('Thank you. Your choices are very important to us.');
+});
+
+manage.addEventListener('click', ()=>{
+  show('Preferences are loading. Please hold.');
+});
+
+function show(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 2800);
+}
+
+window.addEventListener('load', ()=>place());
+window.addEventListener('resize', ()=>{ if (!free) place(); });
+</script>
+</body>
+</html>
